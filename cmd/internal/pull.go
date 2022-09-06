@@ -245,11 +245,12 @@ func (target *Target) createLocaleFiles(remoteLocale *phrase.Locale) (LocaleFile
 	return files, nil
 }
 
-func waitForRateLimit(response phrase.Rate) {
-	var reset time.Time
+func waitForRateLimit(responseRate phrase.Rate) {
+	reset := responseRate.Reset
 	resetTime := reset.Add(time.Second * 5).Sub(time.Now())
-	fmt.Printf("Rate limit exceeded. Download will resume in %d seconds\n", int64(resetTime.Seconds()))
-	time.Sleep(resetTime)
+	fmt.Printf("Rate limit exceeded. Will resume in %d seconds\n", int64(resetTime.Seconds()))
+	// time.Sleep(resetTime)
+	time.Sleep(310 * time.Second) // hardcording 5 minutes as the reset time doesn't seem to be correct
 }
 
 func createLocaleFile(target *Target, remoteLocale *phrase.Locale, tag string) (*LocaleFile, error) {

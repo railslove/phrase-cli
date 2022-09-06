@@ -195,7 +195,23 @@ func (source *Source) uploadFile(client *phrase.APIClient, localeFile *LocaleFil
 		params.Branch = optional.NewString(branch)
 	}
 
-	upload, _, err := client.UploadsApi.UploadCreate(Auth, source.ProjectID, params)
+	upload, response, err := client.UploadsApi.UploadCreate(Auth, source.ProjectID, params)
+
+	if err != nil {
+		if response.Rate.Remaining == 0 {
+			waitForRateLimit(response.Rate)
+
+			// reopen the file again as to upload it another time.
+			file, _ := os.Open(localeFile.Path)
+			params.File = optional.NewInterface(file)
+			upload, response, err = client.UploadsApi.UploadCreate(Auth, source.ProjectID, params)
+			if err != nil {
+				return &upload, err
+			}
+		} else {
+			return &upload, err
+		}
+	}
 
 	return &upload, err
 }
